@@ -8,7 +8,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # --- Sources ---
 set(SOURCES
     src/main.c
-    src/displayer.c
+    src/window.c
+    src/menu.c
     src/button.c
 )
 

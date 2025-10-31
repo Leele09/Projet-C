@@ -1,65 +1,64 @@
-#include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
 #include <stdbool.h>
-#include "displayer.h"
-#include "button.h"
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#include "menu_displayer.h"
+#include "window.h"
 
 int main(int argc, char *argv[]) {
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("Erreur SDL_Init: %s", SDL_GetError());
-        return 1;
-    }
+    // Création de la fenêtre
+    Window window;
+    window.width = 800;
+    window.height = 600;
+    window.backgroundColor = (SDL_Color){219, 233, 238, 255};
 
-    SDL_Window *window = display_window(WINDOW_WIDTH, WINDOW_HEIGHT);
-    if (!window) return 1;
+    window.SDL_window = SDL_CreateWindow(
+        "Jeu de parking",
+        window.width, window.height,
+        SDL_WINDOW_RESIZABLE
+    );
 
-    SDL_Renderer *renderer = get_renderer(window);
-    if (!renderer) return 1;
-
-    SDL_Texture *texture = IMG_LoadTexture(renderer, "assets/logo.png");
-    if (!texture) {
-        SDL_Log("Erreur IMG_LoadTexture: %s", SDL_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
+    if (!window.SDL_window) {
+        SDL_Log("Erreur SDL_CreateWindow: %s", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
-    SDL_FRect rect = {150, 10, 500, 400};
-    Button easyModeButton = create_button(280, 320, 250, 70, (SDL_Color){79, 109, 122, 255});
-    Button hardModeButton = create_button(280, 400, 250, 70, (SDL_Color){79, 109, 122, 255});
+    // Création du renderer
+    window.renderer = SDL_CreateRenderer(window.SDL_window, NULL);
+    if (!window.renderer) {
+        SDL_Log("Erreur SDL_CreateRenderer: %s", SDL_GetError());
+        SDL_DestroyWindow(window.SDL_window);
+        SDL_Quit();
+        return 1;
+    }
 
+    // Initialisation du menu
+    Menu menu = init_menu_window(&window);
+
+    // Boucle principale
     bool running = true;
     SDL_Event event;
 
-    // Boucle de jeu
     while (running) {
         // Gestion des événements
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT)
                 running = false;
 
-            handle_button_event(&easyModeButton, &event);
-            handle_button_event(&hardModeButton, &event);
+            handle_menu_events(&menu, &event);
         }
 
-        set_background_color(renderer, (SDL_Color){219, 233, 238, 1});
-        SDL_RenderTexture(renderer, texture, NULL, &rect);
-        render_button(renderer, &easyModeButton);
-        render_button(renderer, &hardModeButton);
+        // Rendu
+        render_menu(&window, &menu);
+        SDL_RenderPresent(window.renderer);
 
-        SDL_RenderPresent(renderer);
         SDL_Delay(16); // ~60 FPS
     }
 
     // Nettoyage
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyTexture(menu.texture);
+    SDL_DestroyRenderer(window.renderer);
+    SDL_DestroyWindow(window.SDL_window);
     SDL_Quit();
 
     return 0;
 }
-
