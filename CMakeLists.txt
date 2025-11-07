@@ -14,6 +14,7 @@ set(SOURCES
     src/menu_displayer.c
     src/keyboard.c
     src/window.c
+    src/map.c
 )
 
 # --- Include directories ---
