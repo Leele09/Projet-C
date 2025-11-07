@@ -2,6 +2,8 @@
 
 #include "menu_displayer.h"
 #include "window.h"
+#include "game_state.h"
+#include "game_displayer.h"
 
 int main(int argc, char *argv[]) {
     // Création de la fenêtre
@@ -34,7 +36,11 @@ int main(int argc, char *argv[]) {
     // Initialisation du menu
     Menu menu = init_menu_window(&window);
 
+    // Initialisation du jeu
+    Game game = init_game_window(&window);
+
     // Boucle principale
+    GameState state = STATE_MENU;
     bool running = true;
     SDL_Event event;
 
@@ -44,11 +50,19 @@ int main(int argc, char *argv[]) {
             if (event.type == SDL_EVENT_QUIT)
                 running = false;
 
-            handle_menu_events(&menu, &event);
+            if (state == STATE_MENU) {
+                handle_menu_events(&menu, &event, &state);
+            } else if (state == STATE_GAME) {
+                
+            }
         }
 
         // Rendu
-        render_menu(&window, &menu);
+        if (state == STATE_MENU) {
+            render_menu(&window, &menu);
+        } else if (state == STATE_GAME) {
+            
+        }
         SDL_RenderPresent(window.renderer);
 
         SDL_Delay(16); // ~60 FPS

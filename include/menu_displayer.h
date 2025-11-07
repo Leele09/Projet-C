@@ -5,6 +5,7 @@
 #include <SDL3_image/SDL_image.h>
 #include "window.h"
 #include "button.h"
+#include "game_state.h"
 
 typedef struct {
     Window *SDL_window;
@@ -16,6 +17,6 @@ typedef struct {
 
 Menu init_menu_window(Window *SDL_window);
 void render_menu(Window *SDL_window, Menu *menu);
-void handle_menu_events(Menu *menu, SDL_Event *event);
+void handle_menu_events(Menu *menu, SDL_Event *event, GameState *state);
 
 #endif

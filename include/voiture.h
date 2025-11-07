@@ -1,6 +1,7 @@
-typedef struct voiture VEHICULE;
-struct voiture
-{
+#ifndef VOITURE_H
+#define VOITURE_H
+
+typedef struct {
     char direction ; /*N => Nord, S => Sud, E => EST, O => OUEST*/
     int posx; /*Position courante coin haut gauche x de la voiture*/
     int posy; /*Position courante coin haut gauche y de la voiture*/
@@ -16,4 +17,6 @@ struct voiture
     struct voiture * NXT; /*Pointeur vers une prochaine voiture,
     nécessaire pour la liste chaînée*/
     /*Vous pouvez rajouter d’autres variables si nécessaire */
-};
+} Voiture;
+
+#endif
