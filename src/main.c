@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
         // Affichage du parking
         afficher_parking_sdl(renderer, &parking);
-        SDL_Log("Rendering frame...\n");
+        //SDL_Log("Rendering frame...\n");
         SDL_RenderPresent(renderer);
         SDL_Delay(16); // ~60 FPS
     }

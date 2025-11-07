@@ -10,6 +10,7 @@ set(SOURCES
     src/main.c
     src/displayer.c
     src/button.c
+    src/map.c 
 )
 
 # --- Include directories ---

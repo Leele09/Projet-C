@@ -11,7 +11,7 @@ void create_parking_column(Parking *p, int *index_debut,
                            float borne_offset, float borne_hauteur)
 {
     // Petite marge en haut/bas
-    float margin = (y_bottom - y_top) * 0.03f;
+    float margin = (y_bottom - y_top) * 0.1f;
     float total_height = y_bottom - y_top - 2 * margin;
 
     // Espacement vertical entre les places
@@ -40,11 +40,10 @@ void create_parking_column(Parking *p, int *index_debut,
 
 // --- Initialisation du parking ---
 void init_parking(Parking *p, float window_w, float window_h) {
-    // --- Marges globales ---
     float margin_w = window_w * 0.05f;
     float margin_h = window_h * 0.05f;
 
-    // --- Contour du parking ---
+    // Contour global
     p->contour.x = margin_w;
     p->contour.y = margin_h;
     p->contour.w = window_w - 2 * margin_w;
@@ -53,45 +52,94 @@ void init_parking(Parking *p, float window_w, float window_h) {
     p->y_top = p->contour.y;
     p->y_bottom = p->contour.y + p->contour.h;
 
-    // --- Entrée / Sortie ---
-    p->sortie = (SDL_FRect){p->contour.x - 60, p->y_top + p->contour.h * 0.45f, 50, 25};
-    p->entree = (SDL_FRect){p->contour.x + p->contour.w + 10, p->y_top + p->contour.h * 0.45f, 50, 25};
+    // Entrée / Sortie
+    // Taille et espacement des barrières
+    float barriere_w = 8;
+    float barriere_h = 60;
+    float espace_barriere = 20;
 
-    // --- Dimensions ajustées ---
-    int nb_colonnes = 8;
+    // Entrée : bas à droite
+    p->entree1.x = p->contour.x + p->contour.w - barriere_w - 5;
+    p->entree1.y = p->contour.y + p->contour.h - barriere_h - 5;
+    p->entree1.w = barriere_w;
+    p->entree1.h = barriere_h;
+
+    p->entree2.x = p->entree1.x - espace_barriere;
+    p->entree2.y = p->entree1.y;
+    p->entree2.w = barriere_w;
+    p->entree2.h = barriere_h;
+
+    // Sortie : haut à gauche
+    p->sortie1.x = p->contour.x + 5;
+    p->sortie1.y = p->contour.y + 5;
+    p->sortie1.w = barriere_w;
+    p->sortie1.h = barriere_h;
+
+    p->sortie2.x = p->sortie1.x + espace_barriere;
+    p->sortie2.y = p->sortie1.y;
+    p->sortie2.w = barriere_w;
+    p->sortie2.h = barriere_h;
+
+
+    int idx = 0;
     int nb_places_par_colonne = NB_PLACES;
+    int nb_colonnes = 8;
 
-    float largeur_zone_places = p->contour.w * 0.85f;   // zone utilisable réduite
-    float hauteur_zone_places = p->contour.h * 0.9f;    // hauteur totale
-
-    float largeur_place = largeur_zone_places / (nb_colonnes * 2.0f); // plus étroit
-    float hauteur_place = hauteur_zone_places * 0.045f;               // plus court
-
+    // Hauteur et largeur des places
+    float hauteur_place = p->contour.h * 0.045f;
+    float largeur_place = p->contour.w * 0.07f;
     float borne_offset = largeur_place * 0.1f;
     float borne_hauteur = largeur_place * 0.08f;
 
-    // --- Espacement entre colonnes ---
-    float espace_entre_colonnes = largeur_place * 0.2f;
-
-    // --- Centrage horizontal ---
-    float total_width = nb_colonnes * largeur_place + (nb_colonnes - 1) * espace_entre_colonnes;
-    float x_zone_debut = p->contour.x + (p->contour.w - total_width) / 2.0f;
-
-    // --- Zone verticale (5 % de marge en haut et bas) ---
+    // Y top/bottom des colonnes
     float y_top_colonnes = p->y_top + p->contour.h * 0.05f;
     float y_bottom_colonnes = p->y_bottom - p->contour.h * 0.05f;
 
-    // --- Création des colonnes ---
-    int idx = 0;
-    for (int c = 0; c < nb_colonnes; c++) {
-        float x_col = x_zone_debut + c * (largeur_place + espace_entre_colonnes);
-        create_parking_column(p, &idx, x_col, y_top_colonnes, y_bottom_colonnes,
+    // --- Espacement entre blocs ---
+    // blocs : [1][2+3][4+5][6+7][8] => 4 espaces à répartir
+    int nb_espaces = 4;
+    float total_columns_width = nb_colonnes * largeur_place;
+    float espace_total = p->contour.w - total_columns_width;
+    float espace = espace_total / nb_espaces;
+
+    // --- Position X de chaque colonne ---
+    float x = p->contour.x;
+    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place,
+                          hauteur_place, borne_offset, borne_hauteur);
+
+    x += largeur_place + espace;
+    for (int i = 0; i < 2; i++) {
+        create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
                               nb_places_par_colonne, largeur_place,
                               hauteur_place, borne_offset, borne_hauteur);
+        x += largeur_place;
     }
+
+    x += espace;
+    for (int i = 0; i < 2; i++) {
+        create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                              nb_places_par_colonne, largeur_place,
+                              hauteur_place, borne_offset, borne_hauteur);
+        x += largeur_place;
+    }
+
+    x += espace;
+    for (int i = 0; i < 2; i++) {
+        create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                              nb_places_par_colonne, largeur_place,
+                              hauteur_place, borne_offset, borne_hauteur);
+        x += largeur_place;
+    }
+
+    x += espace;
+    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place,
+                          hauteur_place, borne_offset, borne_hauteur);
 
     p->nb_spots = idx;
 }
+
 
 // --- Affichage du parking ---
 void afficher_parking_sdl(SDL_Renderer *renderer, const Parking *p) {
@@ -99,6 +147,7 @@ void afficher_parking_sdl(SDL_Renderer *renderer, const Parking *p) {
     SDL_Color white   = {250, 250, 250, 255};
     SDL_Color vert    = {60, 200, 90, 255};
     SDL_Color rouge   = {230, 60, 60, 255};
+    SDL_Color bleu    = {0, 120, 255, 255};
 
     // Fond (asphalte)
     SDL_SetRenderDrawColor(renderer, asphalt.r, asphalt.g, asphalt.b, 255);
@@ -109,21 +158,74 @@ void afficher_parking_sdl(SDL_Renderer *renderer, const Parking *p) {
     SDL_RenderRect(renderer, &p->contour);
 
     // Entrée / sortie
-    SDL_SetRenderDrawColor(renderer, vert.r, vert.g, vert.b, 255);
-    SDL_RenderFillRect(renderer, &p->entree);
-    SDL_SetRenderDrawColor(renderer, rouge.r, rouge.g, rouge.b, 255);
-    SDL_RenderFillRect(renderer, &p->sortie);
+    SDL_SetRenderDrawColor(renderer, bleu.r, bleu.g, bleu.b, 255);
+    SDL_RenderFillRect(renderer, &p->entree1);
+    SDL_RenderFillRect(renderer, &p->entree2);
+    SDL_RenderFillRect(renderer, &p->sortie1);
+    SDL_RenderFillRect(renderer, &p->sortie2);
 
     // --- Places et bornes ---
     for (int i = 0; i < p->nb_spots; i++) {
         const ParkingSpot *spot = &p->spots[i];
 
+        // contour de la place
         SDL_SetRenderDrawColor(renderer, white.r, white.g, white.b, 255);
         SDL_RenderRect(renderer, &spot->rect);
 
+        // borne active si un véhicule est dessus
         if (spot->borne_active) {
             SDL_SetRenderDrawColor(renderer, vert.r, vert.g, vert.b, 255);
             SDL_RenderFillRect(renderer, &spot->borne);
+        }
+    }
+
+    // --- Traits de circulation (discontinus) ---
+    int nb_colonnes = 8;
+    int nb_espaces = 4;
+    float trait_w = 4;
+    float trait_h = 20;
+    float espace_h = 15;
+
+    float colonnes_x[nb_colonnes];
+    for(int i=0; i<nb_colonnes; i++){
+        colonnes_x[i] = p->spots[i * NB_PLACES].rect.x;
+    }
+
+    int allee_indices[4][2] = {
+        {0, 1},
+        {2, 3},
+        {4, 5},
+        {6, 7}
+    };
+
+    for(int a=0; a<nb_espaces; a++){
+        float x1 = colonnes_x[allee_indices[a][0]];
+        float x2 = colonnes_x[allee_indices[a][1]];
+        float largeur1 = p->spots[allee_indices[a][0] * NB_PLACES].rect.w;
+
+        float x_trait = x1 + largeur1 + (x2 - (x1 + largeur1)) / 2.0f;
+
+        // Tracé discontinu vertical
+        for(int a = 0; a < nb_espaces; a++){
+            int idx_debut = allee_indices[a][0] * NB_PLACES;
+            int idx_fin   = allee_indices[a][1] * NB_PLACES + NB_PLACES - 1;
+
+            float x1 = colonnes_x[allee_indices[a][0]];
+            float x2 = colonnes_x[allee_indices[a][1]];
+            float largeur1 = p->spots[idx_debut].rect.w;
+
+            float x_trait = x1 + largeur1 + (x2 - (x1 + largeur1)) / 2.0f;
+
+            // Limites verticales du trait
+            float y_top_trait = p->spots[idx_debut].rect.y;
+            float y_bottom_trait = p->spots[idx_fin].rect.y + p->spots[idx_fin].rect.h;
+
+            // Tracé discontinu vertical limité
+            for(float y = y_top_trait; y < y_bottom_trait; y += trait_h + espace_h){
+                SDL_FRect segment = {x_trait, y, trait_w, trait_h};
+                SDL_SetRenderDrawColor(renderer, white.r, white.g, white.b, 255);
+                SDL_RenderFillRect(renderer, &segment);
+            }
         }
     }
 }

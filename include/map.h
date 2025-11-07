@@ -15,6 +15,11 @@ typedef struct {
 } ParkingSpot;
 
 typedef struct {
+    SDL_FRect rect;
+    SDL_FRect entree1;
+    SDL_FRect entree2;
+    SDL_FRect sortie1;
+    SDL_FRect sortie2;
     ParkingSpot spots[NB_PLACES * 8];
     SDL_FRect contour;
     SDL_FRect entree;
