@@ -1,5 +1,14 @@
 #include <stdio.h>
+#include <conio.h>
 #include "direction.h"
+char key_pressed(void); 
+
+char key_pressed(void) {
+    if (_kbhit()) {
+        return _getch(); 
+    }
+    return 0;
+}
 
 void direction(VEHICULE *v) {
     char touch;

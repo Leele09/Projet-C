@@ -9,12 +9,11 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(SOURCES
     src/main.c
     src/button.c
+    src/map.c 
     src/direction.c
     src/game_displayer.c
     src/menu_displayer.c
-    src/keyboard.c
     src/window.c
-    src/map.c
 )
 
 # --- Include directories ---

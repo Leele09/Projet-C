@@ -11,7 +11,7 @@
 typedef struct {
     Window *SDL_window;
     int map;
-    Voiture playerCar;
+    VEHICULE playerCar;
 } Game;
 
 Game init_game_window(Window *SDL_window);
