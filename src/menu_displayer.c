@@ -22,9 +22,25 @@ Menu init_menu_window(Window *SDL_window) {
     float button_x = (window_width - button_width) / 2.0f;
     float rect_x = (window_width - 500) / 2.0f;
 
+    // Couleurs des boutons
+    SDL_Color vert = {60, 200, 90, 255};
+    SDL_Color rouge = {200, 60, 90, 255};
+
     menu.rect = (SDL_FRect){rect_x, 10, 500, 400};
-    menu.easyModeButton = create_button(button_x, 320, button_width, button_height, (SDL_Color){79, 109, 122, 255});
-    menu.hardModeButton = create_button(button_x, 400, button_width, button_height, (SDL_Color){79, 109, 122, 255});
+    TTF_Font *font = TTF_OpenFont("assets/Roboto.ttf", 32);
+    if (!font) {
+        SDL_Log("Erreur TTF_OpenFont: %s", SDL_GetError());
+    }
+
+    menu.easyModeButton = create_button(
+        button_x, 320, button_width, button_height,
+        vert, "Easy Mode", font, SDL_window->renderer
+    );
+
+    menu.hardModeButton = create_button(
+        button_x, 400, button_width, button_height,
+        rouge, "Hard Mode", font, SDL_window->renderer
+    );
 
     return menu;
 }

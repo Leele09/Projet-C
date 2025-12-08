@@ -16,7 +16,8 @@ int main(int argc, char *argv[]) {
     Window window;
     window.width = 1200;
     window.height = 700;
-    window.backgroundColor = (SDL_Color){219, 233, 238, 255};
+    SDL_Color backgroundColor = {219, 233, 238, 255};
+    window.backgroundColor = backgroundColor;
 
     window.SDL_window = SDL_CreateWindow(
         "Simulateur de Parking",
@@ -35,6 +36,11 @@ int main(int argc, char *argv[]) {
         SDL_Log("Erreur SDL_CreateRenderer: %s", SDL_GetError());
         SDL_DestroyWindow(window.SDL_window);
         SDL_Quit();
+        return 1;
+    }
+
+    if (TTF_Init() == false) {
+        SDL_Log("Erreur TTF_Init: %s", SDL_GetError());
         return 1;
     }
 
@@ -91,6 +97,9 @@ int main(int argc, char *argv[]) {
     SDL_DestroyTexture(menu.texture);
     SDL_DestroyRenderer(window.renderer);
     SDL_DestroyWindow(window.SDL_window);
+    destroy_button(&menu.easyModeButton);
+    destroy_button(&menu.hardModeButton);
+    TTF_Quit();
     SDL_Quit();
     
     return 0;
