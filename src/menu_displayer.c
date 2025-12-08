@@ -11,9 +11,20 @@ Menu init_menu_window(Window *SDL_window) {
         return menu;
     }
 
-    menu.rect = (SDL_FRect){150, 10, 500, 400};
-    menu.easyModeButton = create_button(280, 320, 250, 70, (SDL_Color){79, 109, 122, 255});
-    menu.hardModeButton = create_button(280, 400, 250, 70, (SDL_Color){79, 109, 122, 255});
+    int window_width, window_height;
+    SDL_GetWindowSize(SDL_window->SDL_window, &window_width, &window_height);
+
+    // Taille des boutons
+    int button_width = 250;
+    int button_height = 70;
+
+    // Calcul position centrée
+    float button_x = (window_width - button_width) / 2.0f;
+    float rect_x = (window_width - 500) / 2.0f;
+
+    menu.rect = (SDL_FRect){rect_x, 10, 500, 400};
+    menu.easyModeButton = create_button(button_x, 320, button_width, button_height, (SDL_Color){79, 109, 122, 255});
+    menu.hardModeButton = create_button(button_x, 400, button_width, button_height, (SDL_Color){79, 109, 122, 255});
 
     return menu;
 }

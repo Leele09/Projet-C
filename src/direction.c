@@ -1,11 +1,39 @@
 #include <stdio.h>
-#include <conio.h>
-#include "direction.h"
-char key_pressed(void); 
+#include <unistd.h>
+#include <termios.h>
+#include <fcntl.h>
+#include <direction.h>
+
+void init_terminal() {
+    struct termios ttystate;
+    tcgetattr(STDIN_FILENO, &ttystate);
+
+    ttystate.c_lflag &= ~ICANON; // mode caractère par caractère
+    ttystate.c_lflag &= ~ECHO;   // désactive l'écho
+    ttystate.c_cc[VMIN] = 0;     // lecture non bloquante
+    ttystate.c_cc[VTIME] = 0;
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
+}
+
+int kbhit() {
+    struct timeval tv = {0L, 0L};
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    return select(1, &fds, NULL, NULL, &tv);
+}
+
+char getch() {
+    char c;
+    if (read(STDIN_FILENO, &c, 1) < 0)
+        return 0;
+    return c;
+}
 
 char key_pressed(void) {
-    if (_kbhit()) {
-        return _getch(); 
+    if (kbhit()) {
+        return getch(); 
     }
     return 0;
 }

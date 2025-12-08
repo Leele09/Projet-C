@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     window.SDL_window = SDL_CreateWindow(
         "Simulateur de Parking",
         window.width, window.height,
-        SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_METAL
     );
 
     if (!window.SDL_window) {
