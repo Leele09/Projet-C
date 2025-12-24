@@ -1,3 +1,147 @@
-à faire dans le main pour que la direction fonction. 
-etape une créer une fonction VEHICULE voiture ={};
-direction(&voiture);
+# 🚗 Simulateur de Parking – Projet C (ESIEA)
+
+## 🧩 Présentation
+
+Ce projet est un **jeu de simulation de parking** développé en **C** avec la bibliothèque **SDL3**.  
+Le joueur contrôle une voiture dans un parking et doit **la garer à un emplacement précis** tout en **évitant les murs et les autres voitures**.
+
+Une fois la voiture garée :
+- Une **nouvelle voiture** est attribuée au joueur.
+- Ensuite, il doit **sortir toutes les voitures** sans collision.
+
+---
+
+## 🎯 Objectifs du jeu
+
+- Contrôler une voiture dans un parking dynamique.
+- Trouver et atteindre la place de stationnement indiquée.
+- Éviter les collisions avec :
+  - les murs du parking ;
+  - les voitures stationnées ou en circulation.
+- Gérer plusieurs véhicules successivement.
+- Sortir les voitures du parking.
+
+---
+
+## 🧱 Fonctionnalités principales
+
+- **Moteur graphique** basé sur [SDL3](https://github.com/libsdl-org/SDL).
+- **Menu interactif** avec boutons (Jouer, Quitter…).
+- **Liste chaînée** pour gérer dynamiquement les voitures.
+- **Détection de collisions** entre véhicules et obstacles.
+- **Modes de jeu** :
+  - *Fluide* → peu de voitures.
+  - *Chargé* → plus de voitures, trafic plus dense.
+- **Boucle de jeu stable à 60 FPS** (~16 ms/frame).
+
+---
+
+## ⚙️ Compilation et exécution
+
+### 🔧 Prérequis
+
+- **Linux**, **macOS** ou **Windows**  
+- **CMake ≥ 3.20**
+- **SDL3** (voir installation ci-dessous)
+
+### 🧱 Installation de SDL3
+
+#### Sous Linux (Ubuntu/Debian)
+```bash
+sudo apt install libsdl3-dev
+```
+
+#### Sous macOS (Homebrew)
+```bash
+brew install sdl3
+```
+
+#### Sous Windows
+Télécharge la version SDL3 depuis :  
+👉 [https://github.com/libsdl-org/SDL/releases](https://github.com/libsdl-org/SDL/releases)
+
+Puis ajoute le chemin du SDK à ton projet dans CMake.
+
+---
+
+### 🏗️ Compilation avec CMake
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+---
+
+### ▶️ Exécution
+
+Depuis le dossier `build` :
+```bash
+./programme
+```
+
+## 🕹️ Commandes du joueur
+
+| Touche | Action |
+|--------|---------|
+| ↑ | Avancer |
+| ↓ | Reculer |
+| ← | Tourner à gauche |
+| → | Tourner à droite |
+| Échap | Retour au menu principal |
+
+---
+
+## 🔊 Sons et effets
+
+Les sons sont joués à l’aide de **sox** (optionnel) :
+```bash
+system("play -q 'assets/sounds/music.mp3' &");
+```
+
+Et arrêtés via :
+```bash
+system("kill `pidof play` &");
+```
+
+---
+
+## 💡 Points techniques abordés
+
+- Pointeurs et **allocation dynamique**
+- **Listes chaînées**
+- **Gestion de fichiers** (`parking_map.txt`, textures, sons)
+- **Gestion d’événements SDL3**
+- **Rendu graphique** (textures, rotations, couleurs)
+- **Organisation modulaire** (plusieurs fichiers `.c` / `.h`)
+- Compilation avec **CMake**
+
+---
+
+## 👥 Auteurs
+
+Projet réalisé dans le cadre du **cours de Projet C – ESIEA 3A S1 (2025/2026)**  
+Encadrement : *Équipe pédagogique ESIEA*
+
+**Binôme :**
+- 🧑‍💻 Neves Sousa Leandro  
+- 🧑‍💻 Ouazzani Chahdi Ilyess
+- 👩‍💻 Mfumumbele Hortensia
+
+---
+
+## 📜 Licence
+
+Projet académique – reproduction libre à des fins pédagogiques uniquement.  
+© 2025 ESIEA — Tous droits réservés.
+
+---
+
+## 🖼️ Aperçu (à venir)
+
+*(Ajoute ici une capture d’écran du jeu une fois le rendu final prêt)*  
+```
+![screenshot du jeu](assets/screenshot.png)
+```
