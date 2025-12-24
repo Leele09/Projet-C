@@ -9,13 +9,16 @@
 
 typedef struct {
     Window *SDL_window;
+
     SDL_Texture *texture;
     SDL_FRect rect;
+    
+    TTF_Font *font;
     Button easyModeButton;
     Button hardModeButton;
 } Menu;
 
-Menu init_menu_window(Window *SDL_window);
+Menu init_menu(Window *SDL_window);
 void render_menu(Window *SDL_window, Menu *menu);
 void handle_menu_events(Menu *menu, SDL_Event *event, GameState *state);
 

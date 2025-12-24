@@ -6,13 +6,12 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # --- Sources ---
 set(SOURCES
-    src/main.c
     src/button.c
-    src/map.c 
-    src/cars.c
-    src/direction.c
     src/game_displayer.c
+    src/main.c
     src/menu_displayer.c
+    src/parking.c 
+    src/vehicule.c
     src/window.c
 )
 

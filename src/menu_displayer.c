@@ -1,6 +1,6 @@
 #include "menu_displayer.h"
 
-Menu init_menu_window(Window *SDL_window) {
+Menu init_menu(Window *SDL_window) {
     Menu menu;
     menu.texture = IMG_LoadTexture(SDL_window->renderer, "assets/logo.png");
     if (!menu.texture) {
@@ -27,19 +27,20 @@ Menu init_menu_window(Window *SDL_window) {
     SDL_Color rouge = {200, 60, 90, 255};
 
     menu.rect = (SDL_FRect){rect_x, 10, 500, 400};
-    TTF_Font *font = TTF_OpenFont("assets/Roboto.ttf", 32);
-    if (!font) {
+
+    menu.font = TTF_OpenFont("assets/Roboto.ttf", 32);
+    if (!menu.font) {
         SDL_Log("Erreur TTF_OpenFont: %s", SDL_GetError());
     }
 
     menu.easyModeButton = create_button(
         button_x, 320, button_width, button_height,
-        vert, "Easy Mode", font, SDL_window->renderer
+        vert, "Easy Mode", menu.font, SDL_window->renderer
     );
 
     menu.hardModeButton = create_button(
         button_x, 400, button_width, button_height,
-        rouge, "Hard Mode", font, SDL_window->renderer
+        rouge, "Hard Mode", menu.font, SDL_window->renderer
     );
 
     return menu;
@@ -56,9 +57,13 @@ void handle_menu_events(Menu *menu, SDL_Event *event, GameState *state) {
     handle_button_event(&menu->easyModeButton, event);
     if (menu->easyModeButton.clicked) {
         *state = STATE_GAME;
+        menu->easyModeButton.clicked = false;
+        return;
     }
     handle_button_event(&menu->hardModeButton, event);
     if (menu->hardModeButton.clicked) {
         *state = STATE_GAME;
+        menu->hardModeButton.clicked = false;
+        return;
     }
 }
