@@ -25,7 +25,13 @@ void render_menu(Window *SDL_window, Menu *menu) {
     render_button(SDL_window->renderer, &menu->hardModeButton);
 }
 
-void handle_menu_events(Menu *menu, SDL_Event *event) {
+void handle_menu_events(Menu *menu, SDL_Event *event, GameState *state) {
     handle_button_event(&menu->easyModeButton, event);
+    if (menu->easyModeButton.clicked) {
+        *state = STATE_GAME;
+    }
     handle_button_event(&menu->hardModeButton, event);
+    if (menu->hardModeButton.clicked) {
+        *state = STATE_GAME;
+    }
 }
