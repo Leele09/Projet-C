@@ -10,6 +10,7 @@ set(SOURCES
     src/button.c
     src/map.c 
     src/cars.c
+    src/direction.c
     src/game_displayer.c
     src/menu_displayer.c
     src/window.c
@@ -21,6 +22,7 @@ include_directories(include)
 # --- SDL3 ---
 find_package(SDL3 REQUIRED)
 find_package(SDL3_image REQUIRED)
+find_package(SDL3_ttf REQUIRED)
 
 # --- Exécutable ---
 add_executable(programme ${SOURCES})
@@ -29,6 +31,7 @@ add_executable(programme ${SOURCES})
 target_link_libraries(programme
     SDL3::SDL3
     SDL3_image::SDL3_image
+    SDL3_ttf::SDL3_ttf
 )
 
 # --- macOS (optionnel) ---

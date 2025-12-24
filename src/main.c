@@ -17,12 +17,13 @@ int main(int argc, char *argv[]) {
     Window window;
     window.width = 1200;
     window.height = 700;
-    window.backgroundColor = (SDL_Color){219, 233, 238, 255};
+    SDL_Color backgroundColor = {219, 233, 238, 255};
+    window.backgroundColor = backgroundColor;
 
     window.SDL_window = SDL_CreateWindow(
         "Simulateur de Parking",
         window.width, window.height,
-        SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_METAL
     );
 
     if (!window.SDL_window) {
@@ -36,6 +37,11 @@ int main(int argc, char *argv[]) {
         SDL_Log("Erreur SDL_CreateRenderer: %s", SDL_GetError());
         SDL_DestroyWindow(window.SDL_window);
         SDL_Quit();
+        return 1;
+    }
+
+    if (TTF_Init() == false) {
+        SDL_Log("Erreur TTF_Init: %s", SDL_GetError());
         return 1;
     }
 
@@ -75,23 +81,13 @@ int main(int argc, char *argv[]) {
             }
         }
         
-        if (state == STATE_GAME) {
- 
-        }
-        
         if (state == STATE_MENU) {
             render_menu(&window, &menu);
         } else if (state == STATE_GAME) {
-             // Lancer le jeu UNE seule fois
             game_loop(window.renderer, &parking);
-
-            // Quand le jeu termine, retour au menu ou quitter
             state = STATE_MENU;
-
-            afficher_parking_sdl(window.renderer, &parking);
         }
         SDL_RenderPresent(window.renderer); 
-        
         
         SDL_Delay(16); // Environ 60 FPS
     }
@@ -99,6 +95,9 @@ int main(int argc, char *argv[]) {
     SDL_DestroyTexture(menu.texture);
     SDL_DestroyRenderer(window.renderer);
     SDL_DestroyWindow(window.SDL_window);
+    destroy_button(&menu.easyModeButton);
+    destroy_button(&menu.hardModeButton);
+    TTF_Quit();
     SDL_Quit();
     
     return 0;
