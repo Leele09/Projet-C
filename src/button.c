@@ -40,16 +40,17 @@ void handle_button_event(Button *btn, SDL_Event *event) {
         btn->hovered = (x >= btn->rect.x && x <= btn->rect.x + btn->rect.w &&
                         y >= btn->rect.y && y <= btn->rect.y + btn->rect.h);
     }
-    else if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+    
+    else if (event->type == SDL_EVENT_MOUSE_BUTTON_UP) {
         float x = event->button.x;
         float y = event->button.y;
+        
         if (x >= btn->rect.x && x <= btn->rect.x + btn->rect.w &&
             y >= btn->rect.y && y <= btn->rect.y + btn->rect.h) {
             btn->clicked = true;
+        } else {
+            btn->clicked = false;
         }
-    }
-    else if (event->type == SDL_EVENT_MOUSE_BUTTON_UP) {
-        btn->clicked = false;
     }
 }
 
@@ -82,5 +83,4 @@ void destroy_button(Button *btn) {
         SDL_DestroyTexture(btn->textTexture);
         btn->textTexture = NULL;
     }
-    TTF_CloseFont(btn->font);
 }

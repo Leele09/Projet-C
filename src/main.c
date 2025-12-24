@@ -4,13 +4,7 @@
 #include "window.h"
 #include "game_state.h"
 #include "game_displayer.h"
-#include "map.h"
-#include "cars.h"
-// Si vous avez besoin de fonctions de mise à jour pour le jeu/voiture, 
-// incluez les en-têtes nécessaires ici (ex: "game_logic.h")
-
-// Déclaration du prototype de la fonction de mise à jour du jeu (à créer)
-// void update_game(Game *game, Parking *parking, float delta_time); 
+#include "parking.h"
 
 int main(int argc, char *argv[]) {
     // --- 1. INITIALISATION DE LA FENÊTRE ET DE SDL ---
@@ -46,27 +40,14 @@ int main(int argc, char *argv[]) {
     }
 
     // --- 2. INITIALISATION DES ÉLÉMENTS DU JEU ---
-    
-    // Initialisation du menu
-    Menu menu = init_menu_window(&window);
+    Menu menu = init_menu(&window);
+    Game game = init_game(&window);
 
-    // Initialisation du jeu (incluant la voiture et l'état initial)
-    Game game = init_game_window(&window);
-
-    // Initialisation du parking
-    Parking parking;
-    // CORRECTION : Utilisation de window.width et window.height (comme discuté)
-    init_parking(&parking, (float)window.width, (float)window.height);
-
-    // --- 3. BOUCLE PRINCIPALE DU JEU ---
     GameState state = STATE_MENU;
     bool running = true;
     SDL_Event event;
-
-    // Variables pour le timing (utile pour les mises à jour basées sur le temps)
-    // Uint64 last_time = SDL_GetTicks();
-    // float delta_time;
-
+    
+    // --- 3. BOUCLE PRINCIPALE DU JEU ---
     while (running) {
 
         while (SDL_PollEvent(&event)) {
@@ -77,26 +58,38 @@ int main(int argc, char *argv[]) {
             if (state == STATE_MENU) {
                 handle_menu_events(&menu, &event, &state);
             } else if (state == STATE_GAME) {
-                // Gestion des événements spécifiques au jeu (clavier, etc.)
+                handle_game_events(&game, &event, &state);
             }
         }
         
+        if (state == STATE_GAME) {
+            update_game(&game);
+        }
+        // Nettoyage l'écran au début
+        SDL_SetRenderDrawColor(window.renderer, window.backgroundColor.r, window.backgroundColor.g, window.backgroundColor.b, 255);
+        SDL_RenderClear(window.renderer);
+
         if (state == STATE_MENU) {
             render_menu(&window, &menu);
         } else if (state == STATE_GAME) {
-            game_loop(window.renderer, &parking);
-            state = STATE_MENU;
+            render_game(&window, &game);
         }
+
         SDL_RenderPresent(window.renderer); 
-        
-        SDL_Delay(16); // Environ 60 FPS
+        SDL_Delay(16); // 60 FPS
     }
 
+    destroy_game(&game);
+
     SDL_DestroyTexture(menu.texture);
-    SDL_DestroyRenderer(window.renderer);
-    SDL_DestroyWindow(window.SDL_window);
+    TTF_CloseFont(menu.font);
+
     destroy_button(&menu.easyModeButton);
     destroy_button(&menu.hardModeButton);
+    
+    SDL_DestroyRenderer(window.renderer);
+    SDL_DestroyWindow(window.SDL_window);
+    
     TTF_Quit();
     SDL_Quit();
     

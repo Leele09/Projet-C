@@ -1,7 +1,91 @@
-#include "map.h"
+#include "parking.h"
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+
+Parking init_parking(float window_w, float window_h) {
+    Parking p;
+
+    float margin_w = window_w * 0.05f;
+    float margin_h = window_h * 0.05f;
+
+    p.contour.x = margin_w;
+    p.contour.y = margin_h;
+    p.contour.w = window_w - 2 * margin_w;
+    p.contour.h = window_h - 2 * margin_h;
+
+    p.y_top = p.contour.y;
+    p.y_bottom = p.contour.y + p.contour.h;
+    p.place_w = p.contour.w * 0.07f;
+
+    float barriere_w = 8, barriere_h = 60, espace_barriere = 20;
+
+    p.entree1 = (SDL_FRect){p.contour.x + p.contour.w - barriere_w - 5,
+                             p.contour.y + p.contour.h - barriere_h - 5,
+                             barriere_w, barriere_h};
+    p.entree2 = (SDL_FRect){p.entree1.x - espace_barriere, p.entree1.y,
+                            barriere_w, barriere_h};
+    p.sortie1 = (SDL_FRect){p.contour.x + 5, p.contour.y + 5, barriere_w, barriere_h};
+    p.sortie2 = (SDL_FRect){p.sortie1.x + espace_barriere, p.sortie1.y, barriere_w, barriere_h};
+
+    int idx = 0;
+    int nb_places_par_colonne = NB_PLACES;
+    int nb_colonnes = 8;
+    float hauteur_place = p.contour.h * 0.045f;
+    float largeur_place = p.contour.w * 0.07f;
+    float borne_hauteur = largeur_place * 0.08f;
+
+    float y_top_colonnes = p.y_top + p.contour.h * 0.05f;
+    float y_bottom_colonnes = p.y_bottom - p.contour.h * 0.05f;
+
+    int nb_espaces = 4;
+    float total_columns_width = nb_colonnes * largeur_place;
+    float espace_total = p.contour.w - total_columns_width;
+    float espace = espace_total / nb_espaces;
+
+    float x = p.contour.x;
+
+    // Colonnes avec bornes alternées
+    create_parking_column(&p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place, hauteur_place,
+                          borne_hauteur, true);
+    x += largeur_place + espace;
+
+    create_parking_column(&p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place, hauteur_place,
+                          borne_hauteur, false);
+    x += largeur_place;
+    create_parking_column(&p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place, hauteur_place,
+                          borne_hauteur, true);
+    x += largeur_place + espace;
+
+    create_parking_column(&p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place, hauteur_place,
+                          borne_hauteur, false);
+    x += largeur_place;
+    create_parking_column(&p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place, hauteur_place,
+                          borne_hauteur, true);
+    x += largeur_place + espace;
+
+    create_parking_column(&p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place, hauteur_place,
+                          borne_hauteur, false);
+    x += largeur_place;
+    create_parking_column(&p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place, hauteur_place,
+                          borne_hauteur, true);
+    x += largeur_place + espace;
+
+    create_parking_column(&p, &idx, x, y_top_colonnes, y_bottom_colonnes,
+                          nb_places_par_colonne, largeur_place, hauteur_place,
+                          borne_hauteur, false);
+
+    p.nb_spots = idx;
+
+    return p;
+}
 
 void create_parking_column(Parking *p, int *index_debut,
                            float x_base, float y_top, float y_bottom,
@@ -34,86 +118,6 @@ void create_parking_column(Parking *p, int *index_debut,
         p->spots[idx].borne.w = borne_hauteur;
         p->spots[idx].borne.h = hauteur_place;
     }
-}
-
-void init_parking(Parking *p, float window_w, float window_h) {
-    float margin_w = window_w * 0.05f;
-    float margin_h = window_h * 0.05f;
-
-    p->contour.x = margin_w;
-    p->contour.y = margin_h;
-    p->contour.w = window_w - 2 * margin_w;
-    p->contour.h = window_h - 2 * margin_h;
-
-    p->y_top = p->contour.y;
-    p->y_bottom = p->contour.y + p->contour.h;
-    p->place_w = p->contour.w * 0.07f;
-
-    float barriere_w = 8, barriere_h = 60, espace_barriere = 20;
-
-    p->entree1 = (SDL_FRect){p->contour.x + p->contour.w - barriere_w - 5,
-                             p->contour.y + p->contour.h - barriere_h - 5,
-                             barriere_w, barriere_h};
-    p->entree2 = (SDL_FRect){p->entree1.x - espace_barriere, p->entree1.y,
-                             barriere_w, barriere_h};
-    p->sortie1 = (SDL_FRect){p->contour.x + 5, p->contour.y + 5, barriere_w, barriere_h};
-    p->sortie2 = (SDL_FRect){p->sortie1.x + espace_barriere, p->sortie1.y, barriere_w, barriere_h};
-
-    int idx = 0;
-    int nb_places_par_colonne = NB_PLACES;
-    int nb_colonnes = 8;
-    float hauteur_place = p->contour.h * 0.045f;
-    float largeur_place = p->contour.w * 0.07f;
-    float borne_hauteur = largeur_place * 0.08f;
-
-    float y_top_colonnes = p->y_top + p->contour.h * 0.05f;
-    float y_bottom_colonnes = p->y_bottom - p->contour.h * 0.05f;
-
-    int nb_espaces = 4;
-    float total_columns_width = nb_colonnes * largeur_place;
-    float espace_total = p->contour.w - total_columns_width;
-    float espace = espace_total / nb_espaces;
-
-    float x = p->contour.x;
-
-    // Colonnes avec bornes alternées
-    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
-                          nb_places_par_colonne, largeur_place, hauteur_place,
-                          borne_hauteur, true);
-    x += largeur_place + espace;
-
-    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
-                          nb_places_par_colonne, largeur_place, hauteur_place,
-                          borne_hauteur, false);
-    x += largeur_place;
-    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
-                          nb_places_par_colonne, largeur_place, hauteur_place,
-                          borne_hauteur, true);
-    x += largeur_place + espace;
-
-    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
-                          nb_places_par_colonne, largeur_place, hauteur_place,
-                          borne_hauteur, false);
-    x += largeur_place;
-    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
-                          nb_places_par_colonne, largeur_place, hauteur_place,
-                          borne_hauteur, true);
-    x += largeur_place + espace;
-
-    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
-                          nb_places_par_colonne, largeur_place, hauteur_place,
-                          borne_hauteur, false);
-    x += largeur_place;
-    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
-                          nb_places_par_colonne, largeur_place, hauteur_place,
-                          borne_hauteur, true);
-    x += largeur_place + espace;
-
-    create_parking_column(p, &idx, x, y_top_colonnes, y_bottom_colonnes,
-                          nb_places_par_colonne, largeur_place, hauteur_place,
-                          borne_hauteur, false);
-
-    p->nb_spots = idx;
 }
 
 void afficher_parking_sdl(SDL_Renderer *renderer, const Parking *p) {
@@ -179,21 +183,5 @@ void afficher_parking_sdl(SDL_Renderer *renderer, const Parking *p) {
             SDL_SetRenderDrawColor(renderer, white.r, white.g, white.b, 255);
             SDL_RenderFillRect(renderer, &segment);
         }
-    }
-}
-
-void update_borne(Parking *p, VEHICULE *v) {
-    if (!v || v->etat == '0') return;
-
-    SDL_FRect car = {v->posx, v->posy, 40, 20};
-
-    for (int i = 0; i < p->nb_spots; i++) {
-        ParkingSpot *spot = &p->spots[i];
-        bool collision =
-            car.x + car.w > spot->borne.x &&
-            car.x < spot->borne.x + spot->borne.w &&
-            car.y + car.h > spot->borne.y &&
-            car.y < spot->borne.y + spot->borne.h;
-        spot->borne_active = collision;
     }
 }
