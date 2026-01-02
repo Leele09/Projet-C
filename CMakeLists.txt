@@ -17,7 +17,7 @@ set(SOURCES
 
 # --- Includes ---
 include_directories(include)
-
+list(APPEND CMAKE_PREFIX_PATH "C:/SDL3/install")
 # --- SDL3 ---
 find_package(SDL3 REQUIRED)
 find_package(SDL3_image REQUIRED)
