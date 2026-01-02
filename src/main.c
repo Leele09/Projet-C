@@ -6,6 +6,16 @@
 #include "game_displayer.h"
 #include "parking.h"
 
+#if defined(_WIN32)
+    Uint32 window_flags = SDL_WINDOW_RESIZABLE;
+#elif defined(__APPLE__)
+    Uint32 window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+#elif defined(__linux__)
+    Uint32 window_flags = SDL_WINDOW_RESIZABLE;
+#else
+    Uint32 window_flags = 0;
+#endif
+
 int main(int argc, char *argv[]) {
     // --- 1. INITIALISATION DE LA FENÊTRE ET DE SDL ---
     Window window;
@@ -17,7 +27,7 @@ int main(int argc, char *argv[]) {
     window.SDL_window = SDL_CreateWindow(
         "Simulateur de Parking",
         window.width, window.height,
-        SDL_WINDOW_METAL
+        window_flags
     );
 
     if (!window.SDL_window) {

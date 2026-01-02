@@ -24,6 +24,9 @@ VEHICULE init_voiture(SDL_Renderer* renderer, float x, float y, double angle) {
 
     return v;
 }
+bool check_collision(SDL_FRect rect1, SDL_FRect rect2) {
+    return SDL_HasRectIntersectionFloat(&rect1, &rect2);
+}
 
 void destroy_voiture(VEHICULE *v) {
     if (v->texture) {

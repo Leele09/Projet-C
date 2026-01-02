@@ -110,13 +110,13 @@ void create_parking_column(Parking *p, int *index_debut,
         p->spots[idx].borne_active = false;
 
         if (borne_a_gauche) {
-            p->spots[idx].borne.x = x_base - borne_hauteur;
+            p->spots[idx].borne.x = x_base; 
         } else {
-            p->spots[idx].borne.x = x_base + largeur_place;
+            p->spots[idx].borne.x = x_base + largeur_place - borne_hauteur;
         }
-        p->spots[idx].borne.y = y;
+        p->spots[idx].borne.y = y + 2; 
         p->spots[idx].borne.w = borne_hauteur;
-        p->spots[idx].borne.h = hauteur_place;
+        p->spots[idx].borne.h = hauteur_place - 4;
     }
 }
 
@@ -125,6 +125,7 @@ void afficher_parking_sdl(SDL_Renderer *renderer, const Parking *p) {
     SDL_Color white   = {250, 250, 250, 255};
     SDL_Color vert    = {60, 200, 90, 255};
     SDL_Color bleu    = {0, 120, 255, 255};
+    SDL_Color rouge = {255, 0, 0, 255};
 
     SDL_SetRenderDrawColor(renderer, asphalt.r, asphalt.g, asphalt.b, 255);
     SDL_RenderClear(renderer);
@@ -141,11 +142,14 @@ void afficher_parking_sdl(SDL_Renderer *renderer, const Parking *p) {
     for (int i = 0; i < p->nb_spots; i++) {
         const ParkingSpot *spot = &p->spots[i];
 
+        if (spot->occupied) {
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        } else {
+            SDL_SetRenderDrawColor(renderer, 60, 200, 90, 255);
+        }
+        SDL_RenderFillRect(renderer, &spot->borne);
         SDL_SetRenderDrawColor(renderer, white.r, white.g, white.b, 255);
         SDL_RenderRect(renderer, &spot->rect);
-
-        SDL_SetRenderDrawColor(renderer, vert.r, vert.g, vert.b, 255);
-        SDL_RenderFillRect(renderer, &spot->borne);
     }
 
     int nb_colonnes = 8;
@@ -168,17 +172,18 @@ void afficher_parking_sdl(SDL_Renderer *renderer, const Parking *p) {
 
     for(int a=0; a<nb_espaces; a++){
         int idx_debut = allee_indices[a][0] * NB_PLACES;
+        int idx_droite = allee_indices[a][1] * NB_PLACES;
         int idx_fin   = allee_indices[a][1] * NB_PLACES + NB_PLACES - 1;
 
-        float x1 = colonnes_x[allee_indices[a][0]];
-        float x2 = colonnes_x[allee_indices[a][1]];
+        float x1 = p->spots[idx_debut].rect.x;
+        float x2 = p->spots[idx_droite].rect.x;
         float largeur1 = p->spots[idx_debut].rect.w;
-
-        float x_trait = x1 + largeur1 + (x2 - (x1 + largeur1)) / 2.0f;
+        float x_trait = (x1 + largeur1) + (x2 - (x1 + largeur1)) / 2.0f - (trait_w / 2.0f);
+        
         float y_top_trait = p->spots[idx_debut].rect.y;
         float y_bottom_trait = p->spots[idx_fin].rect.y + p->spots[idx_fin].rect.h;
 
-        for(float y = y_top_trait; y < y_bottom_trait; y += trait_h + espace_h){
+        for(float y = y_top_trait; y < y_bottom_trait; y += trait_h + espace_h) {
             SDL_FRect segment = {x_trait, y, trait_w, trait_h};
             SDL_SetRenderDrawColor(renderer, white.r, white.g, white.b, 255);
             SDL_RenderFillRect(renderer, &segment);

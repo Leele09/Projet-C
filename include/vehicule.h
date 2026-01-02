@@ -28,5 +28,5 @@ typedef struct {
 
 VEHICULE init_voiture(SDL_Renderer* renderer, float x, float y, double start_angle);
 void destroy_voiture(VEHICULE *v);
-
+bool check_collision(SDL_FRect rect1, SDL_FRect rect2);
 #endif

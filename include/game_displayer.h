@@ -13,6 +13,8 @@
 typedef struct {
     VEHICULE voiture;
     Parking parking;
+    int target_spot_index;
+    int score;
 } Game;
 
 Game init_game(Window *window);
