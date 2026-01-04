@@ -4,7 +4,12 @@
 typedef enum {
     STATE_MENU,
     STATE_GAME,
-    STATE_QUIT
+    STATE_GAMEOVER
 } GameState;
+
+typedef enum {
+    MODE_EASY,
+    MODE_HARD
+} GameMode;
 
 #endif

@@ -28,14 +28,70 @@ void pick_next_target(Game *game) {
     }
 }
 
-Game init_game(Window *window) {
+Game init_game(Window *window, GameMode mode) {
     Game game;
+
+    game.currentMode = mode;
+    if (mode == MODE_EASY) {
+        game.nb_pnjs = MAX_PNJ_EASY;
+    } else {
+        game.nb_pnjs = MAX_PNJ_HARD;
+    }
+
     game.score = 0;
     game.parking = init_parking((float)window->width, (float)window->height);
     game.voiture = init_voiture(window->renderer, START_X, START_Y, START_ANGLE);
-    
+
+    init_pnjs(&game, window->renderer);
+
     pick_next_target(&game);
+
     return game;
+}
+
+void init_pnjs(Game *game, SDL_Renderer *renderer) {
+    int nb_textures_disponibles = 20; // Nombre de voitures disponibles
+    float safe_distance = 120.0f;
+
+    for (int i = 0; i < game->nb_pnjs; i++) {
+        float posx, posy;
+        bool valid_pos = false;
+        int attempts = 0;
+
+        while (!valid_pos && attempts < 100) {
+            // Génération candidat
+            posx = 100 + rand() % 800; 
+            posy = 100 + rand() % 500;
+
+            // Vérification
+            // On passe le tableau game->pnjs et 'i' qui est le nombre de voitures DÉJÀ créées
+            if (is_position_valid(posx, posy, game->pnjs, i, safe_distance)) {
+                valid_pos = true;
+            }
+            attempts++;
+        }
+
+        // Si après 100 tentatives on n'a pas trouvé de place valide, on log une erreur
+        if (valid_pos) {
+            float angle = rand() % 360;
+            int random_index = rand() % nb_textures_disponibles;
+            
+            game->pnjs[i] = init_pnj(
+                renderer,
+                posx,
+                posy,
+                2.0f,  // Vitesse
+                true,  // is_accelerating
+                false, // is_reversing
+                false, // is_turning_left
+                false, // is_turning_right
+                angle,
+                ALL_CAR_TEXTURES[random_index]
+            );
+        } else {
+            SDL_Log("Attention: Impossible de trouver une place libre pour le PNJ %d", i);
+        }
+    }
 }
 
 void handle_game_events(Game *game, SDL_Event *event, GameState *state) {
@@ -63,7 +119,7 @@ void handle_game_events(Game *game, SDL_Event *event, GameState *state) {
     }
 }
 
-void update_game(Game *game) {
+void update_game(Game *game, GameState *state) {
     // --- Mouvement ---
     if (game->voiture.is_accelerating) game->voiture.vitesse = 2.0f;
     else if (game->voiture.is_reversing) game->voiture.vitesse = -1.5f;
@@ -79,6 +135,18 @@ void update_game(Game *game) {
     SDL_FRect car_rect = { game->voiture.posx, game->voiture.posy, 
                            game->voiture.width, game->voiture.height };
 
+    // --- Mise à jour des PNJ ---
+    update_pnjs(game);
+
+    for (int i = 0; i < game->nb_pnjs; i++) {
+        VEHICULE *pnj = &game->pnjs[i];
+        SDL_FRect rect_pnj = { pnj->posx, pnj->posy, pnj->width, pnj->height };
+
+        if (check_collision(car_rect, rect_pnj)) {
+            *state = STATE_GAMEOVER;
+        }
+    }
+
     // --- Gestion des Bornes en temps réel (Visuel uniquement) ---
     for (int i = 0; i < game->parking.nb_spots; i++) {
         ParkingSpot *spot = &game->parking.spots[i];
@@ -89,7 +157,6 @@ void update_game(Game *game) {
         } else {
             spot->occupied = false; 
         }
-        // NOTE: La détection de collision avec spot->borne a été supprimée ici
     }
 
     // --- Logique du Score (Validation sur la cible jaune) ---
@@ -110,6 +177,58 @@ void update_game(Game *game) {
     }
 }
 
+void update_pnjs(Game *game) {
+    for (int i = 0; i < game->nb_pnjs; i++) {
+        VEHICULE *v = &game->pnjs[i];
+
+        float old_x = v->posx;
+        float old_y = v->posy;
+
+        double rad = v->angle * M_PI / 180.0;
+        v->posx += v->vitesse * sin(rad);
+        v->posy -= v->vitesse * cos(rad);
+
+        // Collisions
+        bool changed_dir = false;
+        
+        // Gauche/droite
+        if (v->posx < 0 || v->posx > 1200 - v->width) { // Remplace 1200 par window->width si accessible
+            v->angle = -v->angle; // Inverse l'angle horizontalement (simplifié)
+            changed_dir = true;
+        }
+        
+        // Haut/bas
+        if (v->posy < 0 || v->posy > 700 - v->height) {
+            v->angle = 180 - v->angle; // Inverse l'angle verticalement
+            changed_dir = true;
+        }
+
+        SDL_FRect rect_v = { v->posx, v->posy, v->width, v->height };
+
+        for (int j = 0; j < game->nb_pnjs; j++) {
+            if (i == j) continue; // On ne se teste pas contre soi-même
+
+            VEHICULE *other = &game->pnjs[j];
+            SDL_FRect rect_other = { other->posx, other->posy, other->width, other->height };
+
+            if (check_collision(rect_v, rect_other)) {
+                // On annule le mouvement (retour à la position précédente)
+                v->posx = old_x;
+                v->posy = old_y;
+
+                // On fait rebondir les deux voitures (changement d'angle)
+                v->angle += 180 + (rand() % 60 - 30);
+                other->angle += (rand() % 60 - 30);
+            }
+        }
+
+        // Changement de direction aléatoire
+        if (!changed_dir && (rand() % 100) < 2) {
+            v->angle += (rand() % 90) - 45;
+        }
+    }
+}
+
 void render_game(Window *window, Game *game) {
     afficher_parking_sdl(window->renderer, &game->parking);
 
@@ -123,6 +242,16 @@ void render_game(Window *window, Game *game) {
         SDL_SetRenderDrawBlendMode(window->renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(window->renderer, 255, 255, 0, 100);
         SDL_RenderFillRect(window->renderer, &game->parking.spots[game->target_spot_index].rect);
+    }
+
+    // --- 4. Dessiner les PNJs ---
+    for (int i = 0; i < game->nb_pnjs; i++) {
+        VEHICULE *p = &game->pnjs[i];
+        
+        SDL_FRect dest_pnj = { p->posx, p->posy, p->width, p->height };
+        SDL_FPoint center_pnj = { p->width / 2.0f, p->height / 2.0f };
+        
+        SDL_RenderTextureRotated(window->renderer, p->texture, NULL, &dest_pnj, p->angle, &center_pnj, SDL_FLIP_NONE);
     }
 
     // Rendu de la voiture
@@ -142,4 +271,7 @@ void reset_game(Game *game) {
 
 void destroy_game(Game *game) {
     destroy_voiture(&game->voiture);
+    for (int i = 0; i < game->nb_pnjs; i++) {
+        destroy_voiture(&game->pnjs[i]);
+    }
 }

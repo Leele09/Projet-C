@@ -20,6 +20,6 @@ typedef struct {
 
 Menu init_menu(Window *SDL_window);
 void render_menu(Window *SDL_window, Menu *menu);
-void handle_menu_events(Menu *menu, SDL_Event *event, GameState *state);
+void handle_menu_events(Menu *menu, SDL_Event *event, GameState *state, GameMode *mode);
 
 #endif

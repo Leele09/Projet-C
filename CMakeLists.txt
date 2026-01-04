@@ -8,6 +8,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(SOURCES
     src/button.c
     src/game_displayer.c
+    src/game_over.c
     src/main.c
     src/menu_displayer.c
     src/parking.c 
