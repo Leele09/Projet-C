@@ -132,11 +132,34 @@ void update_game(Game *game, GameState *state) {
     game->voiture.posx += game->voiture.vitesse * sin(rad);
     game->voiture.posy -= game->voiture.vitesse * cos(rad);
 
+    float min_x = game->parking.contour.x;
+    float min_y = game->parking.contour.y;
+    float max_x = game->parking.contour.x + game->parking.contour.w;
+    float max_y = game->parking.contour.y + game->parking.contour.h;
+
+    // Mur GAUCHE
+    if (game->voiture.posx < min_x) {
+        game->voiture.posx = min_x; // On bloque la position
+    } 
+    // Mur DROITE (Attention à la largeur de la voiture)
+    else if (game->voiture.posx + game->voiture.width > max_x) {
+        game->voiture.posx = max_x - game->voiture.width;
+    }
+
+    // Mur HAUT
+    if (game->voiture.posy < min_y) {
+        game->voiture.posy = min_y;
+    }
+    // Mur BAS (Attention à la hauteur de la voiture)
+    else if (game->voiture.posy + game->voiture.height > max_y) {
+        game->voiture.posy = max_y - game->voiture.height;
+    }
+    
     SDL_FRect car_rect = { game->voiture.posx, game->voiture.posy, 
                            game->voiture.width, game->voiture.height };
 
     // --- Mise à jour des PNJ ---
-    update_pnjs(game);
+    update_pnjs(game, &game->parking);
 
     for (int i = 0; i < game->nb_pnjs; i++) {
         VEHICULE *pnj = &game->pnjs[i];
@@ -177,7 +200,13 @@ void update_game(Game *game, GameState *state) {
     }
 }
 
-void update_pnjs(Game *game) {
+void update_pnjs(Game *game, Parking *parking) {
+    // Limites claires du parking pour simplifier la lecture
+    float min_x = parking->contour.x;
+    float min_y = parking->contour.y;
+    float max_x = parking->contour.x + parking->contour.w;
+    float max_y = parking->contour.y + parking->contour.h;
+
     for (int i = 0; i < game->nb_pnjs; i++) {
         VEHICULE *v = &game->pnjs[i];
 
@@ -190,16 +219,32 @@ void update_pnjs(Game *game) {
 
         // Collisions
         bool changed_dir = false;
-        
-        // Gauche/droite
-        if (v->posx < 0 || v->posx > 1200 - v->width) { // Remplace 1200 par window->width si accessible
-            v->angle = -v->angle; // Inverse l'angle horizontalement (simplifié)
+         
+        // Axe Horizontal (Gauche / Droite)
+        if (v->posx < min_x) {
+            // Mur de GAUCHE
+            v->posx = min_x;      // On repousse la voiture DANS le parking (Important !)
+            v->angle = -v->angle; // Rebond miroir
+            changed_dir = true;
+        } 
+        else if (v->posx + v->width > max_x) {
+            // Mur de DROITE (On vérifie posx + width)
+            v->posx = max_x - v->width; // On repousse pour que le côté droit ne dépasse pas
+            v->angle = -v->angle;
             changed_dir = true;
         }
         
-        // Haut/bas
-        if (v->posy < 0 || v->posy > 700 - v->height) {
-            v->angle = 180 - v->angle; // Inverse l'angle verticalement
+        // Axe Vertical (Haut / Bas)
+        if (v->posy < min_y) {
+            // Mur du HAUT
+            v->posy = min_y;            // On repousse
+            v->angle = 180 - v->angle;  // Rebond vertical
+            changed_dir = true;
+        }
+        else if (v->posy + v->height > max_y) {
+            // Mur du BAS (On vérifie posy + height)
+            v->posy = max_y - v->height; // On repousse
+            v->angle = 180 - v->angle;
             changed_dir = true;
         }
 

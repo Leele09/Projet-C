@@ -10,7 +10,7 @@
 #include "vehicule.h"
 #include "game_state.h"
 
-#define MAX_PNJ_EASY 10
+#define MAX_PNJ_EASY 5
 #define MAX_PNJ_HARD 20
 #define MAX_PNJ_CAPACITY MAX_PNJ_HARD
 
@@ -29,7 +29,7 @@ Game init_game(Window *window, GameMode mode);
 void init_pnjs(Game *game, SDL_Renderer *renderer);
 void handle_game_events(Game *game, SDL_Event *event, GameState *state);
 void update_game(Game *game, GameState *state);
-void update_pnjs(Game *game);
+void update_pnjs(Game *game, Parking *parking);
 void render_game(Window *window, Game *game);
 void reset_game(Game *game);
 void destroy_game(Game *game);
