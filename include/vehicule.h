@@ -73,6 +73,7 @@ VEHICULE init_pnj(SDL_Renderer* renderer,
                   bool is_turning_right, 
                   double angle, 
                   const char* path_texture);
+                  
 void init_pnjs_list(PNJNode **list_head, int *nb_pnjs, SDL_Renderer *renderer, int nb_to_spawn);
 const char* get_random_car_texture_path();
 void add_pnj_node(PNJNode **head, VEHICULE v);

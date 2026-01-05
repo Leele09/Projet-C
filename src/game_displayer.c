@@ -49,6 +49,7 @@ Game init_game(Window *window, GameMode mode) {
 }
 
 void handle_game_events(Game *game, SDL_Event *event, GameState *state) {
+    // Gestion des entrées clavier
     if (event->type == SDL_EVENT_KEY_DOWN) {
         switch (event->key.scancode) {
             case SDL_SCANCODE_UP:    game->voiture.is_accelerating = true; break;
@@ -74,7 +75,7 @@ void handle_game_events(Game *game, SDL_Event *event, GameState *state) {
 }
 
 void update_game(Game *game, GameState *state) {
-    // --- Mouvement ---
+    // Mouvement
     if (game->voiture.is_accelerating) game->voiture.vitesse = 2.0f;
     else if (game->voiture.is_reversing) game->voiture.vitesse = -1.5f;
     else game->voiture.vitesse = 0.0f;
@@ -86,6 +87,7 @@ void update_game(Game *game, GameState *state) {
     game->voiture.posx += game->voiture.vitesse * sin(rad);
     game->voiture.posy -= game->voiture.vitesse * cos(rad);
 
+    // Collisions du joueur
     float min_x = game->parking.contour.x;
     float min_y = game->parking.contour.y;
     float max_x = game->parking.contour.x + game->parking.contour.w;
@@ -93,18 +95,17 @@ void update_game(Game *game, GameState *state) {
 
     // Mur GAUCHE
     if (game->voiture.posx < min_x) {
-        game->voiture.posx = min_x; // On bloque la position
+        game->voiture.posx = min_x;
     } 
-    // Mur DROITE (Attention à la largeur de la voiture)
+    // Mur DROITE
     else if (game->voiture.posx + game->voiture.width > max_x) {
         game->voiture.posx = max_x - game->voiture.width;
     }
-
     // Mur HAUT
     if (game->voiture.posy < min_y) {
         game->voiture.posy = min_y;
     }
-    // Mur BAS (Attention à la hauteur de la voiture)
+    // Mur BAS
     else if (game->voiture.posy + game->voiture.height > max_y) {
         game->voiture.posy = max_y - game->voiture.height;
     }
@@ -112,7 +113,7 @@ void update_game(Game *game, GameState *state) {
     SDL_FRect car_rect = { game->voiture.posx, game->voiture.posy, 
                            game->voiture.width, game->voiture.height };
 
-    // --- Mise à jour des PNJ ---
+    // Mise à jour des PNJ
     update_pnjs(game, &game->parking);
 
     PNJNode *current = game->pnj_list;
@@ -126,7 +127,7 @@ void update_game(Game *game, GameState *state) {
         current = current->next;
     }
 
-    // --- Gestion des Bornes en temps réel (Visuel uniquement) ---
+    // Gestion des Bornes en temps réel
     for (int i = 0; i < game->parking.nb_spots; i++) {
         ParkingSpot *spot = &game->parking.spots[i];
 
@@ -138,7 +139,7 @@ void update_game(Game *game, GameState *state) {
         }
     }
 
-    // --- Logique du Score (Validation sur la cible jaune) ---
+    // Logique du Score
     if (game->target_spot_index != -1) {
         ParkingSpot *target = &game->parking.spots[game->target_spot_index];
         
@@ -157,7 +158,7 @@ void update_game(Game *game, GameState *state) {
 }
 
 void update_pnjs(Game *game, Parking *parking) {
-    // Limites claires du parking pour simplifier la lecture
+    // Limites claires du parking
     float min_x = parking->contour.x;
     float min_y = parking->contour.y;
     float max_x = parking->contour.x + parking->contour.w;
@@ -166,7 +167,7 @@ void update_pnjs(Game *game, Parking *parking) {
     PNJNode *it1 = game->pnj_list;
     
     while (it1 != NULL) {
-        VEHICULE *v = &it1->vehicule; // Pointeur vers la donnée
+        VEHICULE *v = &it1->vehicule; // Pointeur vers la voiture
 
         float old_x = v->posx;
         float old_y = v->posy;
@@ -176,7 +177,7 @@ void update_pnjs(Game *game, Parking *parking) {
         v->posx += v->vitesse * sin(rad);
         v->posy -= v->vitesse * cos(rad);
 
-        // --- COLLISIONS MURS (inchangé) ---
+        // COLLISIONS MURS
         bool changed_dir = false;
         if (v->posx < min_x) { v->posx = min_x; v->angle = -v->angle; changed_dir = true; }
         else if (v->posx + v->width > max_x) { v->posx = max_x - v->width; v->angle = -v->angle; changed_dir = true; }
@@ -184,12 +185,12 @@ void update_pnjs(Game *game, Parking *parking) {
         if (v->posy < min_y) { v->posy = min_y; v->angle = 180 - v->angle; changed_dir = true; }
         else if (v->posy + v->height > max_y) { v->posy = max_y - v->height; v->angle = 180 - v->angle; changed_dir = true; }
 
-        // --- COLLISIONS ENTRE PNJ (Liste imbriquée) ---
+        // COLLISIONS ENTRE PNJ
         SDL_FRect rect_v = { v->posx, v->posy, v->width, v->height };
         
-        PNJNode *it2 = game->pnj_list; // On recommence du début
+        PNJNode *it2 = game->pnj_list;
         while (it2 != NULL) {
-            // On ne se compare pas à soi-même (comparaison d'adresses mémoire)
+            // On ne se compare pas à soi-même
             if (it1 != it2) {
                 VEHICULE *other = &it2->vehicule;
                 SDL_FRect rect_other = { other->posx, other->posy, other->width, other->height };
@@ -215,19 +216,19 @@ void update_pnjs(Game *game, Parking *parking) {
 void render_game(Window *window, Game *game) {
     afficher_parking_sdl(window->renderer, &game->parking);
 
-    // 2. Mettre à jour le titre avec le score
+    // Mettre à jour le titre avec le score
     char titre[50];
     sprintf(titre, "Parking Simulator - Score: %d", game->score);
     SDL_SetWindowTitle(window->SDL_window, titre);
 
-    // 3. Dessiner la cible jaune
+    // Dessiner la cible jaune
     if (game->target_spot_index != -1) {
         SDL_SetRenderDrawBlendMode(window->renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(window->renderer, 255, 255, 0, 100);
         SDL_RenderFillRect(window->renderer, &game->parking.spots[game->target_spot_index].rect);
     }
 
-    // --- 4. Dessiner les PNJs ---
+    // Dessiner les PNJs
     PNJNode *current = game->pnj_list;
     while (current != NULL) {
         VEHICULE *p = &current->vehicule;
