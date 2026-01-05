@@ -2,6 +2,9 @@
 #define VEHICULE_H
 
 #include <stdbool.h>
+#include <math.h>
+#include <stdlib.h>
+
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
@@ -54,6 +57,11 @@ typedef struct {
 
 } VEHICULE;
 
+typedef struct PNJNode {
+    VEHICULE vehicule;
+    struct PNJNode *next;
+} PNJNode;
+
 VEHICULE init_voiture(SDL_Renderer* renderer, float x, float y, double start_angle);
 VEHICULE init_pnj(SDL_Renderer* renderer, 
                   float x, 
@@ -65,6 +73,10 @@ VEHICULE init_pnj(SDL_Renderer* renderer,
                   bool is_turning_right, 
                   double angle, 
                   const char* path_texture);
+void init_pnjs_list(PNJNode **list_head, int *nb_pnjs, SDL_Renderer *renderer, int nb_to_spawn);
+const char* get_random_car_texture_path();
+void add_pnj_node(PNJNode **head, VEHICULE v);
+void free_pnj_list(PNJNode *head);
 bool is_position_valid(float x, float y, VEHICULE *pnjs, int nb_pnjs, float safe_distance);
 void destroy_voiture(VEHICULE *v);
 bool check_collision(SDL_FRect rect1, SDL_FRect rect2);

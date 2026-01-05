@@ -42,56 +42,10 @@ Game init_game(Window *window, GameMode mode) {
     game.parking = init_parking((float)window->width, (float)window->height);
     game.voiture = init_voiture(window->renderer, START_X, START_Y, START_ANGLE);
 
-    init_pnjs(&game, window->renderer);
-
+    init_pnjs_list(&game.pnj_list, &game.nb_pnjs, window->renderer, game.nb_pnjs);
     pick_next_target(&game);
 
     return game;
-}
-
-void init_pnjs(Game *game, SDL_Renderer *renderer) {
-    int nb_textures_disponibles = 20; // Nombre de voitures disponibles
-    float safe_distance = 120.0f;
-
-    for (int i = 0; i < game->nb_pnjs; i++) {
-        float posx, posy;
-        bool valid_pos = false;
-        int attempts = 0;
-
-        while (!valid_pos && attempts < 100) {
-            // Génération candidat
-            posx = 100 + rand() % 800; 
-            posy = 100 + rand() % 500;
-
-            // Vérification
-            // On passe le tableau game->pnjs et 'i' qui est le nombre de voitures DÉJÀ créées
-            if (is_position_valid(posx, posy, game->pnjs, i, safe_distance)) {
-                valid_pos = true;
-            }
-            attempts++;
-        }
-
-        // Si après 100 tentatives on n'a pas trouvé de place valide, on log une erreur
-        if (valid_pos) {
-            float angle = rand() % 360;
-            int random_index = rand() % nb_textures_disponibles;
-            
-            game->pnjs[i] = init_pnj(
-                renderer,
-                posx,
-                posy,
-                2.0f,  // Vitesse
-                true,  // is_accelerating
-                false, // is_reversing
-                false, // is_turning_left
-                false, // is_turning_right
-                angle,
-                ALL_CAR_TEXTURES[random_index]
-            );
-        } else {
-            SDL_Log("Attention: Impossible de trouver une place libre pour le PNJ %d", i);
-        }
-    }
 }
 
 void handle_game_events(Game *game, SDL_Event *event, GameState *state) {
@@ -161,13 +115,15 @@ void update_game(Game *game, GameState *state) {
     // --- Mise à jour des PNJ ---
     update_pnjs(game, &game->parking);
 
-    for (int i = 0; i < game->nb_pnjs; i++) {
-        VEHICULE *pnj = &game->pnjs[i];
+    PNJNode *current = game->pnj_list;
+    while (current != NULL) {
+        VEHICULE *pnj = &current->vehicule;
         SDL_FRect rect_pnj = { pnj->posx, pnj->posy, pnj->width, pnj->height };
 
         if (check_collision(car_rect, rect_pnj)) {
             *state = STATE_GAMEOVER;
         }
+        current = current->next;
     }
 
     // --- Gestion des Bornes en temps réel (Visuel uniquement) ---
@@ -207,70 +163,52 @@ void update_pnjs(Game *game, Parking *parking) {
     float max_x = parking->contour.x + parking->contour.w;
     float max_y = parking->contour.y + parking->contour.h;
 
-    for (int i = 0; i < game->nb_pnjs; i++) {
-        VEHICULE *v = &game->pnjs[i];
+    PNJNode *it1 = game->pnj_list;
+    
+    while (it1 != NULL) {
+        VEHICULE *v = &it1->vehicule; // Pointeur vers la donnée
 
         float old_x = v->posx;
         float old_y = v->posy;
 
+        // Mouvement
         double rad = v->angle * M_PI / 180.0;
         v->posx += v->vitesse * sin(rad);
         v->posy -= v->vitesse * cos(rad);
 
-        // Collisions
+        // --- COLLISIONS MURS (inchangé) ---
         bool changed_dir = false;
-         
-        // Axe Horizontal (Gauche / Droite)
-        if (v->posx < min_x) {
-            // Mur de GAUCHE
-            v->posx = min_x;      // On repousse la voiture DANS le parking (Important !)
-            v->angle = -v->angle; // Rebond miroir
-            changed_dir = true;
-        } 
-        else if (v->posx + v->width > max_x) {
-            // Mur de DROITE (On vérifie posx + width)
-            v->posx = max_x - v->width; // On repousse pour que le côté droit ne dépasse pas
-            v->angle = -v->angle;
-            changed_dir = true;
-        }
+        if (v->posx < min_x) { v->posx = min_x; v->angle = -v->angle; changed_dir = true; }
+        else if (v->posx + v->width > max_x) { v->posx = max_x - v->width; v->angle = -v->angle; changed_dir = true; }
         
-        // Axe Vertical (Haut / Bas)
-        if (v->posy < min_y) {
-            // Mur du HAUT
-            v->posy = min_y;            // On repousse
-            v->angle = 180 - v->angle;  // Rebond vertical
-            changed_dir = true;
-        }
-        else if (v->posy + v->height > max_y) {
-            // Mur du BAS (On vérifie posy + height)
-            v->posy = max_y - v->height; // On repousse
-            v->angle = 180 - v->angle;
-            changed_dir = true;
-        }
+        if (v->posy < min_y) { v->posy = min_y; v->angle = 180 - v->angle; changed_dir = true; }
+        else if (v->posy + v->height > max_y) { v->posy = max_y - v->height; v->angle = 180 - v->angle; changed_dir = true; }
 
+        // --- COLLISIONS ENTRE PNJ (Liste imbriquée) ---
         SDL_FRect rect_v = { v->posx, v->posy, v->width, v->height };
+        
+        PNJNode *it2 = game->pnj_list; // On recommence du début
+        while (it2 != NULL) {
+            // On ne se compare pas à soi-même (comparaison d'adresses mémoire)
+            if (it1 != it2) {
+                VEHICULE *other = &it2->vehicule;
+                SDL_FRect rect_other = { other->posx, other->posy, other->width, other->height };
 
-        for (int j = 0; j < game->nb_pnjs; j++) {
-            if (i == j) continue; // On ne se teste pas contre soi-même
-
-            VEHICULE *other = &game->pnjs[j];
-            SDL_FRect rect_other = { other->posx, other->posy, other->width, other->height };
-
-            if (check_collision(rect_v, rect_other)) {
-                // On annule le mouvement (retour à la position précédente)
-                v->posx = old_x;
-                v->posy = old_y;
-
-                // On fait rebondir les deux voitures (changement d'angle)
-                v->angle += 180 + (rand() % 60 - 30);
-                other->angle += (rand() % 60 - 30);
+                if (check_collision(rect_v, rect_other)) {
+                    v->posx = old_x;
+                    v->posy = old_y;
+                    v->angle += 180 + (rand() % 60 - 30);
+                }
             }
+            it2 = it2->next;
         }
 
         // Changement de direction aléatoire
         if (!changed_dir && (rand() % 100) < 2) {
             v->angle += (rand() % 90) - 45;
         }
+
+        it1 = it1->next;
     }
 }
 
@@ -290,13 +228,15 @@ void render_game(Window *window, Game *game) {
     }
 
     // --- 4. Dessiner les PNJs ---
-    for (int i = 0; i < game->nb_pnjs; i++) {
-        VEHICULE *p = &game->pnjs[i];
-        
+    PNJNode *current = game->pnj_list;
+    while (current != NULL) {
+        VEHICULE *p = &current->vehicule;
         SDL_FRect dest_pnj = { p->posx, p->posy, p->width, p->height };
         SDL_FPoint center_pnj = { p->width / 2.0f, p->height / 2.0f };
         
         SDL_RenderTextureRotated(window->renderer, p->texture, NULL, &dest_pnj, p->angle, &center_pnj, SDL_FLIP_NONE);
+        
+        current = current->next;
     }
 
     // Rendu de la voiture
@@ -316,7 +256,6 @@ void reset_game(Game *game) {
 
 void destroy_game(Game *game) {
     destroy_voiture(&game->voiture);
-    for (int i = 0; i < game->nb_pnjs; i++) {
-        destroy_voiture(&game->pnjs[i]);
-    }
+    free_pnj_list(game->pnj_list);
+    game->pnj_list = NULL;
 }

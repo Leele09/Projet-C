@@ -12,11 +12,10 @@
 
 #define MAX_PNJ_EASY 5
 #define MAX_PNJ_HARD 20
-#define MAX_PNJ_CAPACITY MAX_PNJ_HARD
 
 typedef struct {
     VEHICULE voiture;
-    VEHICULE pnjs[MAX_PNJ_CAPACITY];
+    PNJNode *pnj_list;
     int nb_pnjs;
 
     GameMode currentMode;

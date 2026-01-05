@@ -1,5 +1,4 @@
 #include "vehicule.h"
-#include <math.h>
 
 VEHICULE init_voiture(SDL_Renderer* renderer, float x, float y, double angle) {
     VEHICULE v;
@@ -52,30 +51,88 @@ VEHICULE init_pnj(SDL_Renderer* renderer,
     pnj.angle = angle;
     
     pnj.texture = IMG_LoadTexture(renderer, path_texture);
-    
     if (!pnj.texture) {
-        SDL_Log("Erreur chargement voiture : %s", SDL_GetError());
+        SDL_Log("Erreur chargement PNJ : %s", SDL_GetError());
     }
 
     return pnj;
 }
 
-bool is_position_valid(float x, float y, VEHICULE *existing_pnjs, int count, float min_dist) {
-    for (int i = 0; i < count; i++) {
-        float other_x = existing_pnjs[i].posx;
-        float other_y = existing_pnjs[i].posy;
+const char* get_random_car_texture_path() {
+    int nb_textures = sizeof(ALL_CAR_TEXTURES) / sizeof(ALL_CAR_TEXTURES[0]);
+    int index = rand() % nb_textures;
+    return ALL_CAR_TEXTURES[index];
+}
 
-        // Calcul de la distance entre le point candidat et le PNJ existant
-        float dx = x - other_x;
-        float dy = y - other_y;
-        float distance = sqrt(dx*dx + dy*dy);
+void add_pnj_node(PNJNode **head, VEHICULE v) {
+    PNJNode *new_node = (PNJNode*)malloc(sizeof(PNJNode));
+    if (new_node) {
+        new_node->vehicule = v;
+        new_node->next = *head;
+        *head = new_node;
+    }
+}
 
-        // Si la distance est inférieure au minimum requis, la position n'est pas valide
-        if (distance < min_dist) {
-            return false; 
+void free_pnj_list(PNJNode *head) {
+    PNJNode *current = head;
+    while (current != NULL) {
+        PNJNode *next = current->next;
+        
+        // Si la texture est unique au PNJ, on la détruit ici
+        if (current->vehicule.texture) {
+            SDL_DestroyTexture(current->vehicule.texture); 
         }
+        
+        free(current);
+        current = next;
+    }
+}
+
+bool is_position_valid_list(float x, float y, PNJNode *head, float min_dist) {
+    PNJNode *current = head;
+    while (current != NULL) {
+        float dx = x - current->vehicule.posx;
+        float dy = y - current->vehicule.posy;
+        if (sqrt(dx*dx + dy*dy) < min_dist) return false;
+        
+        current = current->next;
     }
     return true;
+}
+
+void init_pnjs_list(PNJNode **list_head, int *nb_pnjs, SDL_Renderer *renderer, int nb_to_spawn) {
+    *list_head = NULL;
+    *nb_pnjs = 0;
+
+    float safe_distance = 80.0f;
+
+    for (int i = 0; i < nb_to_spawn; i++) {
+        float posx, posy;
+        bool valid_pos = false;
+        int attempts = 0;
+
+        while (!valid_pos && attempts < 100) {
+            posx = 100 + rand() % 800;
+            posy = 100 + rand() % 500;
+            // On vérifie par rapport à la liste actuelle
+            if (is_position_valid_list(posx, posy, *list_head, safe_distance)) {
+                valid_pos = true;
+            }
+            attempts++;
+        }
+
+        if (valid_pos) {
+            float angle = rand() % 360;
+            const char* path = get_random_car_texture_path();
+            
+            // Création du véhicule temporaire
+            VEHICULE v = init_pnj(renderer, posx, posy, 2.0f, true, false, false, false, angle, path);
+            
+            // Ajout à la liste chaînée
+            add_pnj_node(list_head, v);
+            (*nb_pnjs)++;
+        }
+    }
 }
 
 bool check_collision(SDL_FRect rect1, SDL_FRect rect2) {
