@@ -3,11 +3,10 @@
 ## 🧩 Présentation
 
 Ce projet est un **jeu de simulation de parking** développé en **C** avec la bibliothèque **SDL3**.  
-Le joueur contrôle une voiture dans un parking et doit **la garer à un emplacement précis** tout en **évitant les murs et les autres voitures**.
+Le joueur contrôle une voiture dans un parking et doit **la garer à un emplacement précis** tout en **évitant les autres voitures**.
 
 Une fois la voiture garée :
 - Une **nouvelle voiture** est attribuée au joueur.
-- Ensuite, il doit **sortir toutes les voitures** sans collision.
 
 ---
 
@@ -19,7 +18,6 @@ Une fois la voiture garée :
   - les murs du parking ;
   - les voitures stationnées ou en circulation.
 - Gérer plusieurs véhicules successivement.
-- Sortir les voitures du parking.
 
 ---
 
@@ -94,25 +92,11 @@ Depuis le dossier `build` :
 
 ---
 
-## 🔊 Sons et effets
-
-Les sons sont joués à l’aide de **sox** (optionnel) :
-```bash
-system("play -q 'assets/sounds/music.mp3' &");
-```
-
-Et arrêtés via :
-```bash
-system("kill `pidof play` &");
-```
-
----
-
 ## 💡 Points techniques abordés
 
 - Pointeurs et **allocation dynamique**
 - **Listes chaînées**
-- **Gestion de fichiers** (`parking_map.txt`, textures, sons)
+- **Gestion de fichiers** (textures)
 - **Gestion d’événements SDL3**
 - **Rendu graphique** (textures, rotations, couleurs)
 - **Organisation modulaire** (plusieurs fichiers `.c` / `.h`)
@@ -123,7 +107,6 @@ system("kill `pidof play` &");
 ## 👥 Auteurs
 
 Projet réalisé dans le cadre du **cours de Projet C – ESIEA 3A S1 (2025/2026)**  
-Encadrement : *Équipe pédagogique ESIEA*
 
 **Binôme :**
 - 🧑‍💻 Neves Sousa Leandro  
@@ -136,12 +119,3 @@ Encadrement : *Équipe pédagogique ESIEA*
 
 Projet académique – reproduction libre à des fins pédagogiques uniquement.  
 © 2025 ESIEA — Tous droits réservés.
-
----
-
-## 🖼️ Aperçu (à venir)
-
-*(Ajoute ici une capture d’écran du jeu une fois le rendu final prêt)*  
-```
-![screenshot du jeu](assets/screenshot.png)
-```
